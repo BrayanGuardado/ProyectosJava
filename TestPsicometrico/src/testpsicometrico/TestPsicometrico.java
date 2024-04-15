@@ -1,18 +1,36 @@
 package testpsicometrico;
-
-import java.util.InputMismatchException;
-import java.util.Scanner;
+import javax.swing.*;
 
 public class TestPsicometrico {
 
-    private final String preguntas[];
-    private final String mensajeDeIntroduccion;
-    private final String almacenamientoDeRespuestas[];
-    private final Scanner input;
-    private final String opcionA;
-    private final String opcionB;
-
-    public TestPsicometrico() {
+    public String preguntas[];
+    public String mensajeDeIntroduccion;
+    private int iteracionPreguntas = 0;
+    private int contadorVerdadero = 0;
+    private int contadorFalso = 0;
+    private final JLabel labelPreguntas;
+    private final JButton btnSiguiente;
+    private final JRadioButton opcionABoton;
+    private final JRadioButton opcionBBoton;
+    private final ButtonGroup grupoDeBotones;
+    private final JLabel seleccionVerdadero;
+    private final JLabel seleccionFalso;
+    private final JLabel porcentaje;
+    private final JLabel nivelSocial;
+            
+    public TestPsicometrico( JLabel labelPreguntas, JRadioButton opcionA, 
+            JRadioButton opcionB, ButtonGroup grupoDeBotones, JButton btnSiguiente, JFrame formularioPreguntas, 
+                JLabel seleccionVerdadero, JLabel seleccionFalso, JLabel porcentaje, JLabel nivelSocial) {
+        
+        this.labelPreguntas = labelPreguntas;
+        this.opcionABoton = opcionA;
+        this.opcionBBoton = opcionB;
+        this.grupoDeBotones = grupoDeBotones;
+        this.btnSiguiente = btnSiguiente;
+        this.seleccionVerdadero = seleccionVerdadero;
+        this.seleccionFalso = seleccionFalso;
+        this.porcentaje = porcentaje;
+        this.nivelSocial = nivelSocial;
         
         this.preguntas = new String[]{
             "1.En general, te encuentras como rodeado de gente.",
@@ -51,94 +69,76 @@ public class TestPsicometrico {
                                      una personalidad y unos intereses distintos, ademas vemos las
                                      cosas de diferente manera y no estamos emitiendo ningun juicio de valor. 
                                      
-                                     Las respuestas son validas, siempre que estas expresen lo que realmente pensamos y sentimos.
+                                     Las respuestas son validas, siempre que estas expresen lo que 
+                                     realmente pensamos y sentimos.\n\n
                                      """;
-        
-        this.almacenamientoDeRespuestas = new String[this.preguntas.length];
-        this.opcionA = "1) Verdadero";
-        this.opcionB = "2) Falso";
-        this.input = new Scanner(System.in);
-        
     }
-  
-    public void play() {
-        
-        int opcionUsuario = 0;
-        
-        inicio:
-        while(opcionUsuario != 2) {
-
-            try {
-                System.out.println("""
-                           Bienvenido al test de Prueba de Sociabilidad
-                           1) Iniciar test
-                           2) Salir
-                """);
-                
-                opcionUsuario = input.nextInt();
-                
-                switch(opcionUsuario) {
-
-                    case 1 -> {
-                        iniciarTest();
-                        break;
-                    } case 2 -> {
-                        System.out.println("\nHasta luego :)");
-                        break;
-                    } default -> {
-                        System.out.println("\nSeleccione una opcion valida!\n");
-                        break;
-                    }
-                }
-            } catch(InputMismatchException e) {
-                System.out.println("""
-                                   -----------------------------
-                                  | INGRESA SOLO DATOS NUMERICOS |
-                                   -----------------------------
-                                   """);
-            } finally { 
-                input.nextLine();
+    
+    public int getIteracionPreguntas() {
+        return iteracionPreguntas;
+    }
+    
+    public void iniciarTest() {
+        this.labelPreguntas.setText(this.preguntas[this.iteracionPreguntas]);
+    }
+    
+    public void actualizarTest() {
+        if(this.preguntas.length != this.iteracionPreguntas + 1) {
+            if(this.iteracionPreguntas + 2 == this.preguntas.length) this.btnSiguiente.setText("FINALIZAR");
+            if(this.verificarCasillaSeleccionada()) {
+                this.incrementarContadores();
+                this.labelPreguntas.setText(this.preguntas[this.iteracionPreguntas]);
+                this.seleccionVerdadero.setText("Veces que seleccionaste verdadero: " + String.valueOf(this.contadorVerdadero));
+                this.seleccionFalso.setText("Veces que seleccionaste falso: " + String.valueOf(this.contadorFalso));
+            } else {
+                JOptionPane.showMessageDialog(null, "Es obligatorio seleccionar una casilla");
             }
+            reiniciarValoresDeCasillas();
+        } else {
+            this.opcionABoton.setEnabled(false);
+            this.opcionBBoton.setEnabled(false);
+            this.incrementarContadores();
+            this.actualizarPorcentajes();
         }
     }
     
-    private void iniciarTest() {
-        
-        System.out.println(this.mensajeDeIntroduccion);
-            
-        int opcionSeleccionadaPorUsuario;
-        inicio:
-        for (int i = 0; i < this.preguntas.length; i++) {
-            System.out.println("\n" + this.preguntas[i]);
-            System.out.println(this.opcionA);
-            System.out.println(this.opcionB);
-            try {
-                opcionSeleccionadaPorUsuario = input.nextInt();
-                
-                if(opcionSeleccionadaPorUsuario != 1 && opcionSeleccionadaPorUsuario != 2) {
-                System.out.println("\nSeleccione una opcion valida\n");
-                i--;
-                } else {
-                    if(opcionSeleccionadaPorUsuario == 1) this.almacenamientoDeRespuestas[i] = this.opcionA;
-                    else this.almacenamientoDeRespuestas[i] = this.opcionB;
-                }
-            } catch(InputMismatchException e) {
-                System.out.println("""
-                                   -----------------------------
-                                  | INGRESA SOLO DATOS NUMERICOS |
-                                   -----------------------------
-                                   """);
-                i--;
-            } finally {
-                input.nextLine();                
-            }
+    private void incrementarContadores() {
+        this.iteracionPreguntas++;
+        if(this.opcionABoton.isSelected()) this.contadorVerdadero++;
+        if(this.opcionBBoton.isSelected()) this.contadorFalso++;
+    }
+    
+    private void reiniciarValoresDeCasillas() {
+        if(this.opcionABoton.isSelected() || this.opcionBBoton.isSelected()) {
+            grupoDeBotones.clearSelection();
         }
+    }
+    
+    public void actualizarContadoresEnPantalla() {
+        this.reiniciarValoresDeCasillas();
+        this.btnSiguiente.setVisible(false);
+        this.seleccionVerdadero.setText("Veces que seleccionaste verdadero: " + String.valueOf(this.contadorVerdadero));
+        this.seleccionFalso.setText("Veces que seleccionaste falso: " + String.valueOf(this.contadorFalso));
+    }
+    
+    private void actualizarPorcentajes() {
+        int totalDePreguntas = this.preguntas.length;
         
-        System.out.println("\nA continuacion se mostraran tus respuestas ingresadas:\n");
-        
-        for(int i = 0; i < this.preguntas.length; i++) {
-            System.out.println("\n" + this.preguntas[i]);
-            System.out.println("Tu respuesta: " + this.almacenamientoDeRespuestas[i] + "\n");
+        double totalPosible = totalDePreguntas + (totalDePreguntas / 3.0);
+        double totalObtenido = this.contadorVerdadero + (this.contadorFalso / 3.0);
+        double totalFinal = (totalObtenido / totalPosible) * 100;
+        this.porcentaje.setText("Tu porcentaje: " + String.valueOf(String.format("%.2f", totalFinal)) + "%");
+        if( (int)totalFinal >= 80 ) this.nivelSocial.setText("Nivel de sociabilidad: Muy Sociable!!");
+        else if( (int)totalFinal >= 50 && (int)totalFinal <= 79) this.nivelSocial.setText("Nivel de sociabilidad: Social!!");
+        else if( (int)totalFinal >= 30 && (int)totalFinal <= 49 ) this.nivelSocial.setText("Nivel de sociabilidad: Poco sociable");
+        else this.nivelSocial.setText("Nivel de sociabilidad: Antisocial");
+    }
+    
+    private boolean verificarCasillaSeleccionada() {
+        boolean validarCasilla = true;
+        if(!this.opcionABoton.isSelected() && !this.opcionBBoton.isSelected()) {
+            validarCasilla = false;
         }
+        return validarCasilla;
     }
 }
